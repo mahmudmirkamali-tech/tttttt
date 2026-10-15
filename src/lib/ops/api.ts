@@ -279,6 +279,8 @@ export const generateDraft = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .handler(async ({ data, context }) => {
     const sql = await db();
+    const denied = await ownerDenied(sql, context.userId);
+    if (denied) return { ok: false as const, error: denied };
     const voiceRows = await sql<{ voice: string }>`
       select voice from studio_voice where user_id = ${context.userId}
     `;
