@@ -3,3 +3,10 @@ node_modules/
 .github_repo
 .env
 .env.*
+
+# Build output and runtime leftovers (never commit)
+.vercel/
+.grok/preview.log
+.grok/status
+.node_modules.lock
+atelier-handoff.zip

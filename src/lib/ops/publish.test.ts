@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { claimAllowed, interpretTelegram, scrubSecret } from "./publish.ts";
+import { claimAllowed, interpretTelegram, isOwnerEmail, scrubSecret } from "./publish.ts";
 
 test("only an approved telegram row without a message id can be claimed", () => {
   assert.equal(claimAllowed("approved", "telegram", null), true);
@@ -21,4 +21,12 @@ test("telegram success requires the API message id", () => {
 
 test("bot token is stripped from stored errors", () => {
   assert.equal(scrubSecret("bad 123:ABC token", "123:ABC"), "bad •••• token");
+});
+
+test("only the configured owner email passes the owner gate", () => {
+  assert.equal(isOwnerEmail("Owner@Gmail.com", "owner@gmail.com"), true);
+  assert.equal(isOwnerEmail("other@gmail.com", "owner@gmail.com"), false);
+  assert.equal(isOwnerEmail(null, "owner@gmail.com"), false);
+  assert.equal(isOwnerEmail("owner@gmail.com", undefined), false);
+  assert.equal(isOwnerEmail("owner@gmail.com", "  "), false);
 });

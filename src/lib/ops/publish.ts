@@ -1,3 +1,9 @@
+export function isOwnerEmail(email: string | null | undefined, ownerEmail: string | undefined) {
+  const owner = ownerEmail?.trim().toLowerCase() ?? "";
+  const mine = email?.trim().toLowerCase() ?? "";
+  return owner.length > 0 && mine.length > 0 && owner === mine;
+}
+
 export function claimAllowed(status: string, channel: string, messageId: string | null) {
   return channel === "telegram" && status === "approved" && !messageId;
 }

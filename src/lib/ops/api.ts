@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { authMiddleware } from "@/lib/auth/middleware";
-import { claimAllowed, interpretTelegram, scrubSecret } from "@/lib/ops/publish";
+import { claimAllowed, interpretTelegram, isOwnerEmail, scrubSecret } from "@/lib/ops/publish";
 
 const CHANNEL = z.enum(["telegram", "instagram"]);
 const STAGE = z.enum(["new", "talking", "qualified", "won", "lost"]);
@@ -70,6 +70,15 @@ async function recentSends(sql: Sql, userId: string) {
   return rows[0]?.n ?? 0;
 }
 
+async function ownerDenied(sql: Sql, userId: string): Promise<string | null> {
+  const ownerEmail = process.env.OWNER_EMAIL?.trim();
+  if (!ownerEmail) return "ایمیل صاحب حساب روی سرور تنظیم نشده. ارسالی انجام نشد.";
+  const rows = await sql<{ email: string | null }>`
+    select email from "user" where id = ${userId}
+  `;
+  return isOwnerEmail(rows[0]?.email, ownerEmail) ? null : "ارسال فقط برای صاحب حساب مجاز است.";
+}
+
 async function recentAi(sql: Sql, userId: string) {
   const rows = await sql<{ n: number }>`
     select count(*)::int as n from ai_calls
@@ -99,6 +108,8 @@ async function deliver(sql: Sql, userId: string, id: string) {
     select status, channel, telegram_message_id from content_items
     where id = ${id} and user_id = ${userId}
   `;
+  const denied = await ownerDenied(sql, userId);
+  if (denied) return { ok: false as const, error: denied };
   const current = existing[0];
   if (!current || !claimAllowed(current.status, current.channel, current.telegram_message_id)) {
     return { ok: false as const, error: "فقط مورد تأییدشدهٔ تلگرام، بدون شناسهٔ پیام، ارسال می‌شود." };
@@ -108,11 +119,7 @@ async function deliver(sql: Sql, userId: string, id: string) {
     await recordFailure(sql, userId, id, error);
     return { ok: false as const, error };
   }
-  if ((await recentSends(sql, userId)) >= 12) {
-    const error = "سقف ۱۲ ارسال در ساعت پر شده.";
-    await recordFailure(sql, userId, id, error);
-    return { ok: false as const, error };
-  }
+  // Claim first, then count: two concurrent requests cannot both pass the cap.
   const claimed = await sql<{ id: string; body: string; title: string }>`
     update content_items
     set status = 'sending', updated_at = now(), error = null
@@ -123,6 +130,18 @@ async function deliver(sql: Sql, userId: string, id: string) {
   const row = claimed[0];
   if (!row) {
     return { ok: false as const, error: "ارسال تکراری رد شد. وضعیت دیگر «تأییدشده» نیست." };
+  }
+  // Count logged sends plus in-flight claims (this one included) so concurrent sends cannot slip past the cap.
+  const inflight = await sql<{ n: number }>`
+    select count(*)::int as n from content_items
+    where user_id = ${userId} and status = 'sending'
+  `;
+  if ((await recentSends(sql, userId)) + (inflight[0]?.n ?? 0) > 12) {
+    await sql`
+      update content_items set status = 'approved', updated_at = now()
+      where id = ${id} and user_id = ${userId} and status = 'sending'
+    `;
+    return { ok: false as const, error: "سقف ۱۲ ارسال در ساعت پر شده." };
   }
   const logId = crypto.randomUUID();
   try {
@@ -179,7 +198,7 @@ async function chat(sql: Sql, userId: string, purpose: string, system: string, u
     },
     body: JSON.stringify({
       model: "grok-4.5",
-      max_tokens: 500,
+      max_tokens: 1200,
       messages: [
         { role: "system", content: system },
         { role: "user", content: user },
@@ -336,6 +355,8 @@ export const dispatchDue = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
     const sql = await db();
+    const denied = await ownerDenied(sql, context.userId);
+    if (denied) return { count: 0, results: [], error: denied };
     const due = await sql<{ id: string }>`
       select id from content_items
       where user_id = ${context.userId} and channel = 'telegram' and status = 'approved'
