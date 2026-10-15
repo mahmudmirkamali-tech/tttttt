@@ -1,0 +1,71 @@
+@import "tailwindcss";
+@import "@fontsource/vazirmatn/400.css";
+@import "@fontsource/vazirmatn/500.css";
+@import "@fontsource/vazirmatn/600.css";
+@import "@fontsource/vazirmatn/700.css";
+@import "@fontsource/lalezar/400.css";
+
+@theme {
+  --color-canvas: #12110e;
+  --color-surface: #1c1a16;
+  --color-raised: #262219;
+  --color-ink: #0c0b09;
+  --color-cream: #f3efe6;
+  --color-mute: #a39b8c;
+  --color-faint: #6f685c;
+  --color-brass: #c6a56a;
+  --color-clay: #a85a45;
+  --color-line: #322e27;
+  --font-sans: "Vazirmatn", ui-sans-serif, system-ui, sans-serif;
+  --font-mark: "Lalezar", "Vazirmatn", ui-sans-serif, sans-serif;
+  --radius-card: 1.25rem;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+    background: var(--color-canvas);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background: var(--color-canvas);
+    color: var(--color-cream);
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+  }
+  h1, h2, h3 {
+    font-family: var(--font-mark);
+    text-wrap: balance;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  button {
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+  }
+  input[type="range"] {
+    accent-color: var(--color-brass);
+    inline-size: 100%;
+  }
+  input[type="checkbox"] {
+    accent-color: var(--color-brass);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-brass);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--color-brass);
+    color: var(--color-ink);
+  }
+  details:not([open]) > :not(summary) {
+    display: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    button { transition: none; }
+  }
+}

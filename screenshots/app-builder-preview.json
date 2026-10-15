@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "آتلیه",
+      "hasCanvas": false,
+      "bodyTextLen": 560,
+      "bodyTextHash": "9b669bd1b20262586815ee6c0f38d3b28d4575f283517ebe84364e17a11cb9f0",
+      "bodyTextPrefix": "آتلیه ساخت مجموعهٔ اصلی، جذب انفجاری تمیز، انتشار اینستا و تلگرا",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "آتلیه",
+      "hasCanvas": false,
+      "bodyTextLen": 560,
+      "bodyTextHash": "b9e058a8fd1def6ed3328499db483121d75dfb68ffe413b7954dbc42620e25ad",
+      "bodyTextPrefix": "آتلیه ساخت مجموعهٔ اصلی، جذب انفجاری تمیز، انتشار اینستا و تلگرا",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-preview.json"
+}
